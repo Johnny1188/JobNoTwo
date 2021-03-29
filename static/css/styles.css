@@ -1,0 +1,61 @@
+body {
+    font-family:'Courier New', Courier, monospace;
+}
+.container {
+    font-family: inherit;
+    margin: auto;
+    min-height: 100vh;
+    width: 80vw;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+}
+.form_box {
+    border-radius: 5px;
+    padding: 30px;
+    width: 45%;
+    min-height: 450px;
+    background-color: rgb(233, 233, 233);
+    text-align: center;
+    border-top: #000 solid 5px;
+}
+.form_box form {
+    font-family: inherit;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+.form_box form input {
+    font-family: inherit;
+    width: 100%;
+    max-width: 250px;
+    margin: auto;
+    margin-bottom: 8px;
+    outline: 0px;
+    border: 2px solid rgb(189, 189, 189);
+    border-radius: 5px;
+    padding: 8px;
+}
+.form_box form input[type="submit"] {
+    font-weight: bold;
+    background-color: #000;
+    color: #fff;
+    border: 2px #000 solid;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.form_box form input[type="submit"]:hover {
+    background-color: #fff;
+    color: #000;
+}
+.delete_field {
+    position: relative;
+}
+.delete_field::before {
+    content: "DELETE -->";
+    text-align: right;
+    position: absolute;
+    left: 20px;
+}

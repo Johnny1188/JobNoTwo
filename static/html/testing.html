@@ -1,0 +1,169 @@
+<html>
+<head>
+  <title>Testing</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="form_box">
+            <h4>CANDIDATE FORM</h4>
+            <form id="candidate_form">
+                <input type="text" name="id" placeholder="ID of person to modify or delete" />
+                <input type="text" name="firstname" placeholder="first name" />
+                <input type="text" name="lastname" placeholder="last name" />
+                <input type="text" name="expectedsalary" placeholder="expected salary" />
+                <input type="text" id="skills_field" name="skills" placeholder="skills (separated by commas)" />
+                <input type="checkbox" class="delete_field" name="delete_btn" />
+                <input type="submit" value="SUBMIT" />
+            </form>
+            <div id="candidate_form_output"></div>
+        </div>
+
+        <div class="form_box">
+            <h4>JOB AD FORM</h4>
+            <form id="job_ad_form">
+                <input type="text" name="id" placeholder="ID of job ad to modify or delete" />
+                <input type="text" name="title" placeholder="title" />
+                <input type="text" name="salary" placeholder="salary" />
+                <input type="text" name="fullinfo" placeholder="full info" />
+                <input type="checkbox" class="delete_field" name="delete_btn" />
+                <input type="submit" value="SUBMIT" />
+            </form>
+            <div id="job_ad_form_output"></div>
+        </div>
+
+        <div class="form_box">
+            <h4>SUBMIT APPLICATION FORM</h4>
+            <form id="submit_application_form">
+                <input type="text" name="candidate_id" placeholder="ID of candidate" />
+                <input type="text" name="job_id" placeholder="ID of job ad" />
+                <input type="checkbox" class="delete_field" name="delete_btn" />
+                <input type="submit" value="SUBMIT" />
+            </form>
+            <div id="submit_application_form_output"></div>
+        </div>
+    </div>
+
+    <script>  
+        const send_request = (req_params,req_body,output_container_id) => {
+            let output_container = document.getElementById(output_container_id);
+
+            if(req_params["url"] && req_params["method"]) {
+                fetch(req_params["url"], {
+                    method: req_params["method"],
+                    body: JSON.stringify(req_body),
+                    headers: {
+                        'Content-type': 'application/json; charset=UTF-8'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    return Promise.reject(response);
+                })
+                .then(data => {
+                    output_container.innerHTML = `<p>${JSON.stringify(data)}</p>`;
+                })
+                .catch(error => {
+                    output_container.innerHTML = `<p>${JSON.stringify(error)}</p>`;
+                });
+            }
+        }
+
+        const get_form_data = (e) => {
+            let form_data = new FormData(e.target);
+            let req_body = {};
+            form_data.forEach((value, key) => { // Skills string to array
+                req_body[key] = value;
+            });
+            return(req_body);
+        }
+
+        const handleCandidateSubmit = (e) => {
+            e.preventDefault();
+
+            // FormData to json, skills from string to array
+            let form_data = new FormData(e.target);
+            let req_body = {};
+            form_data.forEach((value, key) => { // Skills string to array
+                req_body[key] = key != "skills" ? value : value.split(",").map(skill_w_break => skill_w_break.trim());
+            });
+            if(req_body["skills"][0] == "") {req_body["skills"] = []};
+
+            let fetch_obj = {};
+
+            if(req_body["delete_btn"] == "on" && (!req_body["id"] || req_body["id"] == "")) { // DELETE BUT NO ID SPECIFIED
+                let output_container = document.getElementById("candidate_form_output");
+                output_container.innerHTML = `<p>You must specify ID of candidate to delete.</p>`;
+                return( false );
+            } else if(req_body["delete_btn"] == "on" && req_body["id"]) { // DELETE
+                fetch_obj["url"] = `/candidates/${req_body["id"]}`;
+                fetch_obj["method"] = "DELETE";
+            } else if(req_body["id"] && req_body["delete_btn"] != "on") { // UPDATE
+                fetch_obj["url"] = `/candidates/${req_body["id"]}`;
+                fetch_obj["method"] = "PUT";
+            } else { // CREATE NEW
+                fetch_obj["url"] = `/candidates`;
+                fetch_obj["method"] = "POST";
+            }
+
+            send_request(fetch_obj,req_body,"candidate_form_output");
+        }
+
+        const handleJobAdSubmit = (e) => {
+            e.preventDefault();
+
+            let req_body = get_form_data(e);
+            let fetch_obj = {};
+
+            if(req_body["delete_btn"] == "on" && (!req_body["id"] || req_body["id"] == "")) { // DELETE BUT NO ID SPECIFIED
+                let output_container = document.getElementById("job_ad_form_output");
+                output_container.innerHTML = `<p>You must specify ID of the job ad to delete.</p>`;
+                return( false );
+            } else if(req_body["delete_btn"] == "on" && req_body["id"]) { // DELETE
+                fetch_obj["url"] = `/job_ads/${req_body["id"]}`;
+                fetch_obj["method"] = "DELETE";
+            } else if(req_body["id"] && req_body["delete_btn"] != "on") { // UPDATE
+                fetch_obj["url"] = `/job_ads/${req_body["id"]}`;
+                fetch_obj["method"] = "PUT";
+            } else { // CREATE NEW
+                fetch_obj["url"] = `/job_ads`;
+                fetch_obj["method"] = "POST";
+            }
+
+            send_request(fetch_obj,req_body,"job_ad_form_output");
+        }
+
+        const handleApplicationSubmission = (e) => {
+            e.preventDefault();
+
+            let req_body = get_form_data(e);
+            let fetch_obj = {};
+
+            if(req_body["candidate_id"] == "" && req_body["job_id"] == "") { // NO IDs SPECIFIED
+                let output_container = document.getElementById("submit_application_form_output");
+                output_container.innerHTML = `<p>You must specify IDs of the candidate and the job ad.</p>`;
+                return( false );
+            } else if(req_body["delete_btn"] == "on") { // DELETE
+                fetch_obj["url"] = `/candidates/${req_body["candidate_id"]}/applications/${req_body["job_id"]}`;
+                fetch_obj["method"] = "DELETE";
+            } else { // CREATE NEW
+                fetch_obj["url"] = `/candidates/applications`;
+                fetch_obj["method"] = "POST";
+            }
+
+            send_request(fetch_obj,req_body,"submit_application_form_output");
+        }
+
+        const candidate_form = document.getElementById('candidate_form');
+        candidate_form.addEventListener('submit', handleCandidateSubmit);
+
+        const job_ad_form = document.getElementById('job_ad_form');
+        job_ad_form.addEventListener('submit', handleJobAdSubmit);
+
+        const submit_application_form = document.getElementById('submit_application_form');
+        submit_application_form.addEventListener('submit', handleApplicationSubmission);
+    </script>
+</body>
+</html>
