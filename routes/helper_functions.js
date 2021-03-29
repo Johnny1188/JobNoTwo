@@ -1,9 +1,12 @@
 const mysql_connection = require("../connection");
 
-const response_back = (response, err, result) => {
-    let to_send_back = err ? `Error occurred: ${err}` : result;
+const response_back = (response, err, result,status=200) => {
+    let to_send_back = err ? err : result;
     if(!response.headersSent) {
-        response.json(to_send_back);
+        response.send({
+            status: status,
+            message: to_send_back
+        });
     }
 };
 
@@ -57,14 +60,14 @@ const create_bridge_candidate_with_skills = (candidate_id,skills) => {
             parameters.push.apply(parameters, [skills[nth_skill],skills[nth_skill]]); // Add two params for the mysql query
             query += nth_skill < num_of_skills-1 ? "UNION ALL " : ";"; // + UNION ALL if not the end of skills to add
         }
-        mysql_connection.query(query,parameters,err => {
+        mysql_connection.query(query,parameters,(err) => {
             if(err) {console.log(`Error in inserting skills into DB: ${err}`)};
             //  2. Insert a bridge row in candidate-skill table (candidate_id,skill_id)
             //  2.1 Get all skill ids
             get_skill_ids(skills,(skills_found) => {
                 //  2.2 Insert all candidate_id-skill_id into associative table
                 query = "INSERT INTO candidate_skill_bridge (candidate_id,skill_id) VALUES " + skills_found.map(skill_obj => `(${candidate_id},${skill_obj.id})`) + ";";
-                mysql_connection.query(query, err => {
+                mysql_connection.query(query,(err) => {
                     if(err) {console.log(`Error in inserting candidate_id-skill_id into associative table: ${err}`)};
                 })
             })
@@ -77,12 +80,8 @@ const remove_skills_from_candidate = (candidate_id,skills_to_remove) => {
         if(skills_found.length > 0) {
             let query = `DELETE FROM candidate_skill_bridge WHERE candidate_id = ? AND 
                 skill_id IN (${ skills_found.map(skill_obj => skill_obj.id).join(",") })`;
-            mysql_connection.query(query,[candidate_id],(err,result) => {
-                if(err) {
-                    console.log(`Error in deleting candidate_id-skill_id from associative table: ${err}`)
-                } else {
-                    console.log("Successfully removed skills");
-                };
+            mysql_connection.query(query,[candidate_id],(err) => {
+                if(err) {console.log(`Error in deleting candidate_id-skill_id from associative table: ${err}`)}
             })
         }
     })

@@ -14,4 +14,11 @@ app.get("/",(req,res) => {
     res.sendFile(path.join(__dirname,'/static/html/testing.html'));
 })
 
-app.listen(3000,() => {console.log("Job#2's server listening on port 3000")})
+app.use((req, res, next) =>  {
+    res.status(404).send({
+        status: 404,
+        message: "Sorry can't find that!"
+    })
+});
+
+app.listen(3000,() => {console.log("Job#2's server listening on port 3000")});
